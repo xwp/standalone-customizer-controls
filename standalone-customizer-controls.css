@@ -1,0 +1,20 @@
+
+label.setting {
+	display: block;
+}
+
+fieldset.control {
+	border: solid 1px black;
+	padding: 1em;
+	margin-bottom: 1em;
+}
+
+textarea.setting {
+	font-family: monospace;
+}
+
+textarea.setting.json-parse-error {
+	border: solid 1px red;
+	outline: solid 1px red;
+	box-shadow: red;
+}
