@@ -41,7 +41,8 @@ function register_scripts( \WP_Scripts $scripts ) {
 	$handle = PLUGIN_SLUG;
 	$src = plugin_dir_url( __FILE__ ) . 'standalone-customizer-controls.js';
 	$deps = array(
-		'wp-util',
+		'wp-util', // @todo Should be a dependency for customize-controls in Core.
+		'wp-color-picker', // @todo Should be a dependency for customize-controls in Core.
 		'customize-controls',
 	);
 	$scripts->add( $handle, $src, $deps );
@@ -56,7 +57,10 @@ add_action( 'wp_default_scripts', __NAMESPACE__ . '\register_scripts' );
 function register_styles( \WP_Styles $styles ) {
 	$handle = PLUGIN_SLUG;
 	$src = plugin_dir_url( __FILE__ ) . 'standalone-customizer-controls.css';
-	$deps = array( 'customize-controls' );
+	$deps = array(
+		'customize-controls',
+		'wp-color-picker', // @todo Should be a dependency for customize-controls in Core.
+	);
 	$styles->add( $handle, $src, $deps );
 }
 add_action( 'wp_default_styles', __NAMESPACE__ . '\register_styles' );
@@ -125,6 +129,28 @@ function render_admin_page_contents() {
 			),
 		);
 	}
+
+	$id = 'sky_color';
+	$setting = $wp_customize->add_setting( $id, array(
+		'transport' => 'none',
+		'default' => '#278df4',
+		'sanitize_callback' => 'sanitize_hex_color',
+	) );
+	$control = $wp_customize->add_control( new \WP_Customize_Color_Control( $wp_customize, $id, array(
+		'label' => __( 'Sky Color', 'standalone-customizer-controls' ),
+		'setting' => array( $setting->id ),
+	) ) );
+	$examples['color-control'] = array(
+		'heading' => __( 'Color Control', 'standalone-customizer-controls' ),
+		'setting' => array(
+			'id' => $setting->id,
+			'params' => $setting->json(),
+		),
+		'control' => array(
+			'id' => $control->id,
+			'params' => $control->json(),
+		),
+	);
 
 	?>
 	<div class="wrap">
