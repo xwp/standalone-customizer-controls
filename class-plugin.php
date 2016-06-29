@@ -161,6 +161,35 @@ class Plugin {
 			'control' => $control,
 		);
 
+		// Multi-field control.
+		if ( class_exists( 'Customize_Posts_Plugin' ) ) {
+			require_once WP_PLUGIN_DIR . '/customize-posts/php/class-wp-customize-dynamic-control.php';
+			require_once __DIR__ . '/class-mailing-address-control.php';
+			$wp_customize->register_control_type( __NAMESPACE__ . '\Mailing_Address_Control' );
+
+			$id = 'street-address';
+			$setting = $wp_customize->add_setting( $id, array(
+				'type' => 'js',
+				'transport' => 'none',
+				'default' => array(
+					'street_address' => '123 Main St',
+					'city' => 'Portland',
+					'state' => 'OR',
+					'zip' => '97000',
+					'is_business' => false,
+				),
+			) );
+			$control = new Mailing_Address_Control( $wp_customize, $id, array(
+				'label' => __( 'Mailing Address', 'standalone-customizer-controls' ),
+				'setting' => array( $setting->id ),
+			) );
+			$this->examples['street-address-control'] = array(
+				'heading' => __( 'Multi-Field Control', 'standalone-customizer-controls' ),
+				'setting' => $setting,
+				'control' => $control,
+			);
+		}
+
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		add_action( 'admin_footer', array( $wp_customize, 'render_control_templates' ) );
 		add_action( 'admin_footer', array( $wp_customize, 'render_section_templates' ) );
@@ -177,6 +206,7 @@ class Plugin {
 		) );
 
 		wp_enqueue_script( static::SLUG );
+		wp_enqueue_script( 'customize-dynamic-control' );
 		wp_enqueue_style( static::SLUG );
 
 		foreach ( $this->examples as $example ) {
@@ -194,6 +224,14 @@ class Plugin {
 	 * Render admin page contents.
 	 */
 	function render_admin_page_contents() {
+		if ( ! wp_script_is( 'customize-dynamic-control', 'registered' ) ) {
+			?>
+			<div class="error">
+				<p><?php esc_html_e( 'Please install and activate the Customize Posts plugin to make use of the Dynamic control bundled with it.', 'standalone-customizer-controls' ) ?></p>
+			</div>
+			<?php
+		}
+
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Standalone Customizer Controls Demo', 'standalone-customizer-controls' ) ?></h1>
