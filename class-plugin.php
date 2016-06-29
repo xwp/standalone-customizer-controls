@@ -183,7 +183,7 @@ class Plugin {
 					'street' => '123 Main St',
 					'city' => 'Portland',
 					'state' => 'OR',
-					'zip' => '97000',
+					'zip' => '97204',
 					'is_business' => false,
 				),
 			) );

@@ -63,7 +63,7 @@ class Customize_Address_Control extends \WP_Customize_Dynamic_Control {
 		<p class="zip">
 			<label>
 				ZIP:
-				<input data-customize-setting-property-link="zip" size="5" pattern="\d\d\d\d\d(-\d\d\d\d)?" required>
+				<input data-customize-setting-property-link="zip" size="6" pattern="\d\d\d\d\d(-\d\d\d\d)?" required>
 			</label>
 		</p>
 
