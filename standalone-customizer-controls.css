@@ -25,3 +25,6 @@ textarea.setting.json-parse-error {
 .customize-control-notifications-container {
 	margin-bottom: 3px;
 }
+#media-control.standalone-control-example {
+	width: 300px;
+}
