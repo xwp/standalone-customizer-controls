@@ -45,7 +45,6 @@ function register_scripts( \WP_Scripts $scripts ) {
 	$src = plugin_dir_url( __FILE__ ) . 'standalone-customizer-controls.js';
 	$deps = array(
 		'wp-util', // @todo Should be a dependency for customize-controls in Core.
-		'wp-color-picker', // @todo Should be a dependency for customize-controls in Core.
 		'customize-controls',
 	);
 	$scripts->add( $handle, $src, $deps );
@@ -62,7 +61,6 @@ function register_styles( \WP_Styles $styles ) {
 	$src = plugin_dir_url( __FILE__ ) . 'standalone-customizer-controls.css';
 	$deps = array(
 		'customize-controls',
-		'wp-color-picker', // @todo Should be a dependency for customize-controls in Core.
 	);
 	$styles->add( $handle, $src, $deps );
 }
