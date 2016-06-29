@@ -50,6 +50,14 @@ class Plugin {
 			'customize-controls',
 		);
 		$scripts->add( $handle, $src, $deps );
+
+		$handle = 'customize-address-control';
+		$src = plugin_dir_url( __FILE__ ) . 'customize-address-control.js';
+		$deps = array(
+			'customize-controls',
+			'customize-dynamic-control',
+		);
+		$scripts->add( $handle, $src, $deps );
 	}
 
 
@@ -164,22 +172,22 @@ class Plugin {
 		// Multi-field control.
 		if ( class_exists( 'Customize_Posts_Plugin' ) ) {
 			require_once WP_PLUGIN_DIR . '/customize-posts/php/class-wp-customize-dynamic-control.php';
-			require_once __DIR__ . '/class-mailing-address-control.php';
-			$wp_customize->register_control_type( __NAMESPACE__ . '\Mailing_Address_Control' );
+			require_once __DIR__ . '/class-customize-address-control.php';
+			$wp_customize->register_control_type( __NAMESPACE__ . '\Customize_Address_Control' );
 
 			$id = 'street-address';
 			$setting = $wp_customize->add_setting( $id, array(
 				'type' => 'js',
 				'transport' => 'none',
 				'default' => array(
-					'street_address' => '123 Main St',
+					'street' => '123 Main St',
 					'city' => 'Portland',
 					'state' => 'OR',
 					'zip' => '97000',
 					'is_business' => false,
 				),
 			) );
-			$control = new Mailing_Address_Control( $wp_customize, $id, array(
+			$control = new Customize_Address_Control( $wp_customize, $id, array(
 				'label' => __( 'Mailing Address', 'standalone-customizer-controls' ),
 				'setting' => array( $setting->id ),
 			) );
@@ -200,8 +208,19 @@ class Plugin {
 	 */
 	function enqueue_admin_scripts() {
 		wp_scripts()->add_data( static::SLUG, 'data', sprintf(
-			sprintf( '_wpCustomizeControlsL10n.required_value_invalidity = %s;', wp_json_encode(
-				__( 'Missing required value.', 'standalone-customizer-controls' )
+			sprintf( '_wpCustomizeControlsL10n.validityErrors = %s;', wp_json_encode(
+				array(
+					'customError' => __( 'Custom error.', 'standalone-customizer-controls' ),
+					'patternMismatch' => __( 'Pattern mismatch.', 'standalone-customizer-controls' ),
+					'rangeOverflow' => __( 'Range overflow.', 'standalone-customizer-controls' ),
+					'rangeUnderflow' => __( 'Range underflow.', 'standalone-customizer-controls' ),
+					'stepMismatch' => __( 'Step mismatch.', 'standalone-customizer-controls' ),
+					'tooLong' => __( 'Too long.', 'standalone-customizer-controls' ),
+					'tooShort' => __( 'Too short.', 'standalone-customizer-controls' ),
+					'typeMismatch' => __( 'Type mismatch.', 'standalone-customizer-controls' ),
+					'valueMissing' => __( 'Value missing.', 'standalone-customizer-controls' ),
+					'invalid'  => __( 'Invalid value.', 'standalone-customizer-controls' ),
+				)
 			) )
 		) );
 

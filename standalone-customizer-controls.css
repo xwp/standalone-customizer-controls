@@ -3,14 +3,21 @@ body {
 	overflow: visible;
 }
 
+.standalone-control-example {
+	margin-bottom: 2em;
+}
+
 label.setting {
 	display: block;
 }
 
 fieldset.control {
-	border: solid 1px black;
+	border: solid 1px #ccc;
 	padding: 1em;
 	margin-bottom: 1em;
+}
+fieldset.control.invalid {
+	border-color: red;
 }
 
 textarea.setting {
@@ -27,4 +34,16 @@ textarea.setting.json-parse-error {
 }
 #media-control.standalone-control-example {
 	width: 300px;
+}
+.customize-control-address input[type=text],
+.customize-control-address select,
+.customize-control-address textarea {
+	display: block;
+	width: 30ex;
+	min-width: auto;
+}
+fieldset.control input.invalid,
+fieldset.control select.invalid,
+fieldset.control textarea.invalid {
+	border: solid 1px red;
 }

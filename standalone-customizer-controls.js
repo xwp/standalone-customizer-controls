@@ -22,6 +22,9 @@ var StandaloneCustomizerControls = (function( $ ) {
 	component.init = function initializeStandaloneCustomizerControls( api, containers ) {
 		component.api = api;
 
+		component.api.control.bind( 'add', component.addControlInputValidation );
+		component.extendSettingsWithValidityState();
+
 		// Create a mock previewer for any controls that look at it.
 		if ( ! component.api.previewer ) {
 			component.api.previewer = {
@@ -36,6 +39,82 @@ var StandaloneCustomizerControls = (function( $ ) {
 		containers.each( function() {
 			component.setupExample( $( this ) );
 		} );
+	};
+
+	/**
+	 * Add integration with HTML5 validation.
+	 *
+	 * @todo Something like this would be good to have in Core.
+	 *
+	 * @param {wp.customize.Control} control Control.
+	 */
+	component.addControlInputValidation = function addControlInputValidation( control ) {
+		var api = component.api;
+		control.deferred.embedded.done( function() {
+			control.setting.bind( function() {
+				var invalidCount = 0, inactiveInputs = [], activeInvalidInput, notification, code = 'invalid_value';
+				control.container.find( ':input' ).each( function() {
+					var input = $( this );
+					if ( ! input[0].checkValidity() ) {
+						input.addClass( 'invalid' );
+						invalidCount += 1;
+						inactiveInputs.push( input );
+					} else {
+						input.removeClass( 'invalid' );
+					}
+				} );
+
+				if ( 0 === invalidCount ) {
+					control.setting.notifications.remove( code );
+				} else {
+					notification = new api.Notification( code, {
+						message: api.l10n.validityErrors.invalid
+					} );
+					control.setting.notifications.add( code, notification );
+
+					// Report validity on the focused invalid input, or on the first invalid input.
+					activeInvalidInput = _.find( inactiveInputs, function( input ) {
+						return input.is( document.activeElement );
+					} );
+					if ( ! activeInvalidInput ) {
+						activeInvalidInput = inactiveInputs[0];
+					}
+					if ( activeInvalidInput[0].reportValidity ) {
+						activeInvalidInput[0].reportValidity();
+					}
+				}
+			} );
+		} );
+	};
+
+	/**
+	 * Extend settings with validity state.
+	 *
+	 * Watch the notifications on a setting with a given type of 'error' and set
+	 * the validity state to true/false accordingly.
+	 */
+	component.extendSettingsWithValidityState = function extendSettingsWithValidityState() {
+		var originalSettingInitialize = component.api.Setting.prototype.initialize;
+		component.api.Setting.prototype.initialize = function( id, value, args ) {
+			var watchNotifications, validity, notifications;
+			originalSettingInitialize.call( this, id, value, args );
+			validity = new component.api.Value( true );
+			notifications = this.notifications;
+
+			// Note that debounce is needed because the remove event is triggered _before_ the notification is removed.
+			watchNotifications = _.debounce( function() {
+				var errorCount = 0;
+				notifications.each( function( notification ) {
+					if ( 'error' === notification.type ) {
+						errorCount += 1;
+					}
+				} );
+				validity.set( 0 === errorCount );
+			} );
+			notifications.bind( 'add', watchNotifications );
+			notifications.bind( 'remove', watchNotifications );
+			this.validity = validity;
+		};
 	};
 
 	/**
@@ -61,7 +140,7 @@ var StandaloneCustomizerControls = (function( $ ) {
 	 * Set up an example.
 	 */
 	component.setupExample = function setupExample( container ) {
-		var data, setting, SettingConstructor, control, ControlConstructor, controlExtensions, settingTextarea, updateTextarea, originalInitFrame;
+		var data, setting, SettingConstructor, fieldset, control, ControlConstructor, controlExtensions, settingTextarea, updateTextarea, originalInitFrame;
 		data = container.data( 'config' );
 
 		// Setting.
@@ -78,22 +157,6 @@ var StandaloneCustomizerControls = (function( $ ) {
 			)
 		);
 		component.api.add( setting.id, setting );
-
-		// Add example client-side validation for settings being required.
-		// @todo It would be preferred if this could be indicated declaratively on WP_Customize_Setting itself, and the JS logic added to wp.customize.Setting directly.
-		setting.bind( function( value ) {
-			var notification, code = 'required_value_invalidity';
-			if ( _.isString( value ) && ! $.trim( value ) ) {
-				if ( ! setting.notifications.has( code ) ) {
-					notification = new component.api.Notification( code, {
-						message: component.api.l10n[ code ] || code
-					} );
-					setting.notifications.add( notification.code, notification );
-				}
-			} else {
-				setting.notifications.remove( code );
-			}
-		} );
 
 		// Control.
 		ControlConstructor = component.api.controlConstructor[ data.control.params.type ] || component.api.Control;
@@ -128,7 +191,7 @@ var StandaloneCustomizerControls = (function( $ ) {
 			/**
 			 * Patch MediaControl.prototype.ready to work without section.
 			 *
-			 * Note that this is a patched version of what is in core to handle
+			 * @todo Note that this is a patched version of what is in core to handle.
 			 */
 			controlExtensions.ready = function mediaControlReady() {
 				var control = this, api = component.api;
@@ -233,7 +296,12 @@ var StandaloneCustomizerControls = (function( $ ) {
 		component.api.control.add( control.id, control );
 
 		// Add the control to the DOM.
-		container.find( 'fieldset.control > ul' ).append( control.container );
+		fieldset = container.find( 'fieldset.control' );
+		fieldset.find( '> ul' ).append( control.container );
+
+		setting.validity.bind( function( valid ) {
+			fieldset.toggleClass( 'invalid', ! valid );
+		} );
 
 		// Set up a textarea to show and tweak the underlying setting value.
 		settingTextarea = container.find( 'textarea.setting' );
