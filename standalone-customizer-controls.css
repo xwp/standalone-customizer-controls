@@ -22,3 +22,6 @@ textarea.setting.json-parse-error {
 	outline: solid 1px red;
 	box-shadow: red;
 }
+.customize-control-notifications-container {
+	margin-bottom: 3px;
+}

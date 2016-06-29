@@ -85,8 +85,11 @@ add_action( 'admin_menu', __NAMESPACE__ . '\register_admin_page' );
  */
 function load_admin_page() {
 	global $wp_customize;
+
+	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
+	require_once ABSPATH . WPINC . '/class-wp-customize-setting.php';
+	// @todo require_once __DIR__ . '/class-wp-customize-client-validated-setting.php';
 	if ( empty( $wp_customize ) ) {
-		require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
 		$wp_customize = new \WP_Customize_Manager(); // WPCS: override ok.
 		$wp_customize->register_controls();
 	}
@@ -100,6 +103,12 @@ function load_admin_page() {
  * Enqueue admin scripts.
  */
 function enqueue_admin_scripts() {
+	wp_scripts()->add_data( PLUGIN_SLUG, 'data', sprintf(
+		sprintf( '_wpCustomizeControlsL10n.required_value_invalidity = %s;', wp_json_encode(
+			__( 'Missing required value.', 'standalone-customizer-controls' )
+		) )
+	) );
+
 	wp_enqueue_script( PLUGIN_SLUG );
 	wp_enqueue_style( PLUGIN_SLUG );
 }
@@ -112,6 +121,7 @@ function render_admin_page_contents() {
 
 	$examples = array();
 
+	// Re-used blogname control and setting.
 	$setting = $wp_customize->get_setting( 'blogname' );
 	$control = $wp_customize->get_control( 'blogname' );
 	if ( $setting && $control ) {
@@ -130,18 +140,44 @@ function render_admin_page_contents() {
 		);
 	}
 
+	// New sky color control.
 	$id = 'sky_color';
-	$setting = $wp_customize->add_setting( $id, array(
-		'transport' => 'none',
+	$setting = $wp_customize->add_setting( new \WP_Customize_Setting( $wp_customize, $id, array(
+		'type' => 'js', // Prevent setting from being handled on the server.
+		'transport' => 'none', // Prevent setting change from being synced anywhere.
 		'default' => '#278df4',
-		'sanitize_callback' => 'sanitize_hex_color',
-	) );
+	) ) );
+	// @todo Allow a control's setting param to be WP_Customize_Setting instances in addition to just setting IDs.
 	$control = $wp_customize->add_control( new \WP_Customize_Color_Control( $wp_customize, $id, array(
 		'label' => __( 'Sky Color', 'standalone-customizer-controls' ),
 		'setting' => array( $setting->id ),
 	) ) );
 	$examples['color-control'] = array(
 		'heading' => __( 'Color Control', 'standalone-customizer-controls' ),
+		'setting' => array(
+			'id' => $setting->id,
+			'params' => $setting->json(),
+		),
+		'control' => array(
+			'id' => $control->id,
+			'params' => $control->json(),
+		),
+	);
+
+	// Textarea control.
+	$id = 'about';
+	$setting = $wp_customize->add_setting( $id, array(
+		'type' => 'js',
+		'transport' => 'none',
+		'default' => 'WordPress is Free and open source software, built by a distributed community of mostly volunteer developers from around the world. WordPress comes with some awesome, worldview-changing rights courtesy of its license, the GPL.',
+	) );
+	$control = $wp_customize->add_control( $id, array(
+		'type' => 'textarea',
+		'label' => __( 'About', 'standalone-customizer-controls' ),
+		'setting' => array( $setting->id ),
+	) );
+	$examples['textarea-control'] = array(
+		'heading' => __( 'Textarea Control', 'standalone-customizer-controls' ),
 		'setting' => array(
 			'id' => $setting->id,
 			'params' => $setting->json(),

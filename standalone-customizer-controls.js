@@ -1,4 +1,4 @@
-/* global module, jQuery, _, JSON */
+/* global module, jQuery, _, JSON, _standaloneCustomizerControlsExports */
 /* exported StandaloneCustomizerControls */
 
 var StandaloneCustomizerControls = (function( $ ) {
@@ -6,7 +6,12 @@ var StandaloneCustomizerControls = (function( $ ) {
 
 	var component = {};
 
-	component.data = {};
+	component.data = {
+		l10n: {}
+	};
+	if ( 'undefined' !== typeof _standaloneCustomizerControlsExports ) {
+		_.extend( component.data, _standaloneCustomizerControlsExports );
+	}
 
 	/**
 	 * Initialize.
@@ -17,6 +22,7 @@ var StandaloneCustomizerControls = (function( $ ) {
 	component.init = function initializeStandaloneCustomizerControls( api, containers ) {
 		component.api = api;
 
+		// Create a mock previewer for any controls that look at it.
 		if ( ! component.api.previewer ) {
 			component.api.previewer = {
 				deferred: {
@@ -71,6 +77,22 @@ var StandaloneCustomizerControls = (function( $ ) {
 			)
 		);
 		component.api.add( setting.id, setting );
+
+		// Add example client-side validation for settings being required.
+		// @todo It would be preferred if this could be indicated declaratively on WP_Customize_Setting itself, and the JS logic added to wp.customize.Setting directly.
+		setting.bind( function( value ) {
+			var notification, code = 'required_value_invalidity';
+			if ( _.isString( value ) && ! $.trim( value ) ) {
+				if ( ! setting.notifications.has( code ) ) {
+					notification = new component.api.Notification( code, {
+						message: component.api.l10n[ code ] || code
+					} );
+					setting.notifications.add( notification.code, notification );
+				}
+			} else {
+				setting.notifications.remove( code );
+			}
+		} );
 
 		// Control.
 		ControlConstructor = component.api.controlConstructor[ data.control.params.type ] || component.api.Control;
