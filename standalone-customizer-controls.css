@@ -1,4 +1,8 @@
 
+body {
+	overflow: visible;
+}
+
 label.setting {
 	display: block;
 }
