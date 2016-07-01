@@ -14,3 +14,5 @@ This is a demonstration of how to use Customizer settings and controls outside t
 Please install and active the Customize Posts plugin to use all of the examples.
 
 To access the examples, please go to the admin and access Appearance > Standalone Customizer Controls Demo.
+
+See [#29071](https://core.trac.wordpress.org/ticket/29071): “Make it easier to include an instance of the Customizer outside of customize.php”.
