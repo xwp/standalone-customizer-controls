@@ -92,6 +92,8 @@ var StandaloneCustomizerControls = (function( $ ) {
 	 *
 	 * Watch the notifications on a setting with a given type of 'error' and set
 	 * the validity state to true/false accordingly.
+	 * 
+	 * @todo This should be part of Core.
 	 */
 	component.extendSettingsWithValidityState = function extendSettingsWithValidityState() {
 		var originalSettingInitialize = component.api.Setting.prototype.initialize;
